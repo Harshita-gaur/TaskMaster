@@ -1,0 +1,287 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly To-Do List</title>
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        .container {
+            height: 100%;
+            padding: 20px;
+            background: linear-gradient(150deg, #153677, #4e085f);
+            display: flex;
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+        }
+        .week-table {
+            width: 100%;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            vertical-align: top;
+        }
+        th {
+            background: #153677;
+            color: #fff;
+            text-align: left;
+        }
+        td {
+            position: relative;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-list li {
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 25px;
+        }
+        .task-list li input[type="checkbox"] {
+            position: absolute;
+            left: 0;
+            top: 5px;
+        }
+        .task-list li.important {
+            background: #0ebe1c;
+            color: #721c24;
+            border-radius: 5px;
+        }
+        .task-list li.checked {
+            text-decoration: line-through;
+            color: #555;
+        }
+        .subtask-input {
+            width: calc(100% - 30px);
+            margin-left: 25px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .highlight-btn {
+            background: #d81010;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .task-input {
+            width: calc(100% - 60px);
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .add-task-btn {
+            padding: 5px 10px;
+            background: #218838;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .add-task-btn:hover {
+            background: #1bb63c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="week-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-day="Monday"></td>
+                        <td data-day="Tuesday"></td>
+                        <td data-day="Wednesday"></td>
+                        <td data-day="Thursday"></td>
+                        <td data-day="Friday"></td>
+                        <td data-day="Saturday"></td>
+                        <td data-day="Sunday"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    days.forEach(day => {
+        const dayContainer = document.querySelector(`[data-day="${day}"]`);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Add task for ${day}`;
+        input.className = 'task-input';
+
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Add';
+        addButton.className = 'add-task-btn';
+        addButton.onclick = () => addTask(day, input.value.trim());
+
+        dayContainer.appendChild(input);
+        dayContainer.appendChild(addButton);
+
+        const taskList = document.createElement('ul');
+        taskList.className = 'task-list';
+        dayContainer.appendChild(taskList);
+    });
+
+    function addTask(day, taskText) {
+        if (taskText) {
+            const taskList = document.querySelector(`[data-day="${day}"] .task-list`);
+            const li = document.createElement('li');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.onchange = () => toggleTaskCompletion(li);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '\u00d7';
+            deleteButton.className = 'delete-btn';
+            deleteButton.onclick = () => deleteTask(li);
+
+            li.appendChild(checkbox);
+            li.appendChild(document.createTextNode(` ${taskText}`));
+
+            const highlightButton = document.createElement('button');
+            highlightButton.textContent = '!';
+            highlightButton.className = 'highlight-btn';
+            highlightButton.onclick = () => toggleHighlight(li);
+            li.appendChild(highlightButton);
+            li.appendChild(deleteButton);
+            
+            const subtaskInput = document.createElement('input');
+            subtaskInput.type = 'text';
+            subtaskInput.placeholder = 'Add subtask';
+            subtaskInput.className = 'subtask-input';
+            subtaskInput.onkeypress = (e) => addSubtask(e, li);
+            li.appendChild(subtaskInput);
+
+            const subtaskList = document.createElement('ol');
+            li.appendChild(subtaskList);
+
+            taskList.appendChild(li);
+            saveTasks();
+        }
+    }
+
+    function addSubtask(event, li) {
+        if (event.key === 'Enter') {
+            const subtaskText = event.target.value.trim();
+            if (subtaskText) {
+                const subtaskList = li.querySelector('ol');
+                const subtaskLi = document.createElement('li');
+                const subtaskCheckbox = document.createElement('input');
+                subtaskCheckbox.type = 'checkbox';
+                subtaskCheckbox.onchange = () => toggleTaskCompletion(subtaskLi);
+                
+                const subtaskDeleteButton = document.createElement('button');
+                subtaskDeleteButton.textContent = '\u00d7';
+                subtaskDeleteButton.className = 'delete-btn';
+                subtaskDeleteButton.onclick = () => deleteTask(subtaskLi);
+
+                subtaskLi.appendChild(subtaskCheckbox);
+                subtaskLi.appendChild(document.createTextNode(` ${subtaskText}`));
+                subtaskLi.appendChild(subtaskDeleteButton);
+                subtaskList.appendChild(subtaskLi);
+                
+                event.target.value = '';
+                saveTasks();
+            }
+        }
+    }
+
+    function toggleTaskCompletion(taskElement) {
+        taskElement.classList.toggle('checked');
+        saveTasks();
+    }
+
+    function toggleHighlight(taskElement) {
+        taskElement.classList.toggle('important');
+        saveTasks();
+    }
+
+    function deleteTask(taskElement) {
+        taskElement.remove();
+        saveTasks();
+    }
+
+    function saveTasks() {
+        const tasksData = {};
+        const taskLists = document.querySelectorAll('.task-list');
+        taskLists.forEach((taskList, index) => {
+            const day = days[index];
+            tasksData[day] = taskList.innerHTML;
+        });
+        localStorage.setItem("data", JSON.stringify(tasksData));
+    }
+
+    function showData() {
+        const savedData = localStorage.getItem("data");
+        if (savedData) {
+            const tasksData = JSON.parse(savedData);
+            Object.keys(tasksData).forEach(day => {
+                const taskList = document.querySelector(`[data-day="${day}"] .task-list`);
+                taskList.innerHTML = tasksData[day];
+                
+                // Re-bind events for loaded tasks
+                const tasks = taskList.querySelectorAll('li');
+                tasks.forEach(task => {
+                    const checkbox = task.querySelector('input[type="checkbox"]');
+                    const deleteButton = task.querySelector('.delete-btn');
+                    const highlightButton = task.querySelector('.highlight-btn');
+                    
+                    checkbox.onchange = () => toggleTaskCompletion(task);
+                    deleteButton.onclick = () => deleteTask(task);
+                    highlightButton.onclick = () => toggleHighlight(task);
+                });
+            });
+        }
+    }
+
+    showData();
+</script>
+
+    
+</body>
+</html> -->
